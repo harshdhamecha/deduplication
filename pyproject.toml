@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dedup"
+version = "0.1.0"
+description = "Scale-adaptive image deduplication pipeline for object-detection datasets"
+readme = "README.md"
+requires-python = ">=3.10"
+# NOTE on pinning philosophy: this is a portfolio project, not a library other
+# code depends on. We pin loosely (>=) so the env is easy to reproduce on a
+# fresh machine, and keep the *hard* version constraints (CUDA-matched torch,
+# faiss) in environment.yml where they actually matter.
+dependencies = [
+    "numpy>=1.24",
+    "pillow>=10.0",
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "tqdm>=4.66",
+    "rich>=13.0",
+    "imagehash>=4.3",     # phash/dhash/ahash/whash; wraps PyWavelets for whash
+    "PyWavelets>=1.4",
+    "pycocotools>=2.0.7", # COCO JSON parsing + (later) mAP for the train-twice harness
+    "lmdb>=1.4",          # disk-backed key-value store for Stage 1 at large scale
+    # torch / faiss are installed via environment.yml (CUDA-matched) — see README.
+]
+
+[project.optional-dependencies]
+# Embedding backbones + the optional GPU-decode/training extras live here so the
+# core install stays light and CPU-only-runnable for the small-dataset path.
+embeddings = [
+    "torch>=2.6",          # cu128 build installed separately for Blackwell GPUs
+    "transformers>=4.40",  # DINOv2 backbones
+    "timm>=1.0",
+    "open_clip_torch>=2.24",
+]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+dedup = "dedup.cli:main"
+
+[tool.setuptools.packages.find]
+# scripts/ is shipped alongside dedup so the CLI's `fetch-data` command can
+# import scripts.fetch_coco_subset even when run via the installed console
+# entry point (where the project root isn't on sys.path).
+include = ["dedup*", "scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

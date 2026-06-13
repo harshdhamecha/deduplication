@@ -1,0 +1,25 @@
+# Data & run artifacts (large, regenerable)
+data/
+runs/
+*.lmdb/
+*.mmap
+*.npy
+
+# Models (downloaded weights; dinov2_large is ~1.2GB)
+models/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

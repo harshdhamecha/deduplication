@@ -6,10 +6,15 @@ Portfolio/resume project — optimize for learning depth and measurable impact,
 not shortest path to working code.
 
 ## Hardware
-- GPU: RTX 5070 Ti (16GB VRAM)
-- System RAM: [your actual RAM]
+- GPU: RTX 5070 Ti (16GB VRAM) — Blackwell sm_120, needs CUDA 12.8 / torch cu128
+- System RAM: 30 GB (stage3.ram_budget_gb default of 24 leaves headroom)
 - Storage: 1 TB SSD
 - Must also run CPU-only for small datasets
+
+## Environment gotcha (Blackwell)
+torch + torchvision must BOTH come from the cu128 index, or transformers'
+AutoImageProcessor fails ("operator torchvision::nms does not exist"). See README
+Setup. FAISS is CPU-only (no reliable sm_120 GPU wheels; not the bottleneck).
 
 ## Module Layout
 hashing/ | embeddings/ | indexing/ | clustering/ | resolution/ | leakage/ |
@@ -33,7 +38,9 @@ Primary: COCO JSON. Parser lives in io/. Keep it behind an interface so
 YOLO/VOC can be added later without touching other modules.
 
 ## Dataset / Demo
-[To be Added]
+COCO val2017 subset via `dedup fetch-data --num-images N` (scripts/fetch_coco_subset.py).
+Downloads the annotations zip once + N images, writes data/annotations/instances_val2017_subset.json.
+Default backbone facebook/dinov2-base (768-d, downloads); models/dinov2_large (1024-d) works offline.
 
 # Working Principles
 

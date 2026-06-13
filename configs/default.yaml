@@ -1,0 +1,60 @@
+# Default configuration for the deduplication pipeline.
+#
+# This file documents every knob and mirrors the dataclass defaults in
+# dedup/config.py. You can delete any line you don't want to override — missing
+# keys fall back to the built-in default. Override single leaves from the CLI
+# instead of editing this file, e.g.:
+#   dedup --set stage2.hamming_threshold=6 --set stage3.index_type=ivfflat run-all
+
+seed: 42
+log_level: INFO
+
+io:
+  image_root: data/images/val2017
+  annotations: data/annotations/instances_val2017_subset.json
+  annotation_format: coco
+  output_dir: runs/latest
+
+stage1:                      # exact duplicates (SHA-256)
+  enabled: true
+  storage_backend: auto      # auto | memory | lmdb
+  lmdb_threshold: 5000000    # switch dict -> LMDB above this many items
+
+stage2:                      # near-duplicates (perceptual hashing)
+  enabled: true
+  hashes: [phash, dhash]     # catch JPEG recompression + small spatial shifts
+  hash_size: 8               # 8x8 -> 64-bit hash
+  hamming_threshold: 8       # conservative for detection (small-object sensitivity)
+  combine: any               # any (recall, catch both modes) | all (precision)
+  search_strategy: auto      # auto | bruteforce | multiindex | bktree
+
+stage3:                      # semantic duplicates (embeddings + ANN index)
+  enabled: true
+  backbone: dinov2_vitb14    # dinov2_vitb14 | clip | sscd | dinov2_large
+  model_path: null
+  device: auto               # auto | cuda | cpu
+  batch_size: 64
+  num_workers: 8
+  use_dali: false
+  pre_resize: false
+  fp16_embeddings: true
+  index_type: auto           # auto | flat | ivfflat | ivfpq  (auto = scale selector)
+  nlist: 4096
+  nprobe: 16
+  pq_m: 64
+  pq_nbits: 8
+  rerank: true
+  rerank_k: 100
+  ram_budget_gb: 24.0
+  cosine_threshold: 0.92     # conservative; lower = more aggressive merging
+
+stage4:                      # cluster resolution + leakage prep
+  enabled: true
+  keep_strategy: keep_most_annotated  # + keep_highest_res | keep_central | weighted_sample
+  partition_key: null        # e.g. video_id -> same-scene frames never split
+  video_subsample_k: 0       # keep every k-th frame (0/1 = disabled)
+
+leakage:
+  enabled: true
+  train_split: train
+  eval_splits: [val, test]

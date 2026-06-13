@@ -1,0 +1,39 @@
+# Demo config for the planted-leakage scenario (scripts/make_leakage_demo.py).
+# Uses the offline local DINOv2-Large so the demo needs no model download.
+seed: 42
+log_level: INFO
+
+io:
+  image_root: data/demo/images          # contains train/ and val/ subdirs
+  annotations: data/demo/annotations/instances.json
+  annotation_format: coco
+  output_dir: runs/demo
+
+stage1:
+  enabled: true
+  storage_backend: auto
+
+stage2:
+  enabled: true
+  hashes: [phash, dhash]
+  hamming_threshold: 8                   # catches the recompressed+cropped leak copies
+  combine: any
+  search_strategy: auto
+
+stage3:
+  enabled: true
+  backbone: dinov2_large                 # offline; 1024-d
+  model_path: models/dinov2_large
+  device: auto
+  num_workers: 4
+  index_type: auto                       # -> IndexFlatIP at this scale
+  cosine_threshold: 0.92
+
+stage4:
+  enabled: true
+  keep_strategy: keep_most_annotated     # prefer the richly-annotated train original
+
+leakage:
+  enabled: true
+  train_split: train
+  eval_splits: [val]

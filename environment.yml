@@ -1,0 +1,35 @@
+# Conda environment for the deduplication pipeline.
+#
+# WHY conda (not pure venv): faiss ships cleanly via conda-forge with matched
+# BLAS, and we want one reproducible spec for the heavy native deps. We pin
+# Python 3.11 (stock base was 3.9, which is past its comfortable support window
+# for torch/transformers).
+#
+# WHY torch is NOT listed here: the RTX 5070 Ti is a Blackwell GPU (sm_120) and
+# needs a CUDA 12.8 build of PyTorch, which conda-forge does not reliably carry.
+# We install it via pip from the cu128 index AFTER creating the env (see README):
+#
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+#
+# WHY faiss-cpu (not faiss-gpu): GPU FAISS wheels do not reliably target sm_120
+# yet, and at our demo scale the index search is not the bottleneck — embedding
+# extraction is, and that runs on the GPU via torch. The scale-tier *logic*
+# (Flat -> IVFFlat -> IVFPQ) is identical on CPU faiss; only wall-clock differs.
+#
+# Install order (torch is intentionally NOT in this file — see above):
+#   conda env create -f environment.yml
+#   conda activate dedup
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+#   pip install -e ".[embeddings]"     # transformers/timm/open_clip (uses the torch above)
+#
+# Steps 1-3 of the build run with just the core+dev install below; torch and the
+# embedding backbones are only needed from Step 4 (Stage 3) onward.
+name: dedup
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - faiss-cpu>=1.8
+  - pip:
+      - -e ".[dev]"
