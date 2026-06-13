@@ -1,4 +1,4 @@
-# Scale-Adaptive Image Deduplication for Object Detection
+32# Scale-Adaptive Image Deduplication for Object Detection
 
 A four-stage cascade that deduplicates object-detection image datasets and
 **quantifies train/test leakage**. The thesis the code is built to demonstrate:
@@ -212,4 +212,4 @@ configs/default.yaml   scripts/fetch_coco_subset.py · plant_duplicates.py · ma
 ```
 
 See [docs/design-decisions.md](docs/design-decisions.md) for the tradeoff
-write-up (adaptable into a blog post).
+write-up.
